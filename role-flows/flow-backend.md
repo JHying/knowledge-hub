@@ -130,6 +130,8 @@ description: >
 1. 完整 Java 程式碼（含所有需要新增/修改的類別）
 2. 程式碼必須符合 skill: `/code-architect` 規範
 3. 附上修改清單：修改了哪些檔案、原因
+4. 執行 `/diagram <主要入口類別> 的完整流程`，輸出至 `{$PROJECT_KB}/source-codex/services/{service}/flow-diagram-{TICKET}.md`
+5. 呼叫 `/update-kb`，依 `{{impls_format}}` 建立或更新 `{$PROJECT_KB}/specs/impls/{TICKET}-impls.md`
 
 ### 程式碼規範重點
 - 分層：Controller → AppService → DomainService → Manager → Infra

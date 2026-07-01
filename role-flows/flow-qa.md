@@ -73,6 +73,8 @@ description: >
 
 ## Step 5 — 等待選擇，產出 Phase 2（完整測試規劃）
 
+> 範本格式參照 `{{qa_format}}`
+
 ### Happy Path 測試案例
 | # | 前置條件 | 操作步驟 | 預期結果 | 對應 AC |
 
@@ -94,6 +96,20 @@ description: >
 ### Mock 清單
 | 外部依賴 | Mock 工具 | 需要 stub 的情境 |
 |---------|----------|----------------|
+
+---
+
+## Step 6 — 執行測試並記錄結果（auto 模式）
+
+auto 模式下，Phase 2 完成後：
+1. 撰寫單元測試與整合測試程式碼
+2. 執行測試，取得通過 / 失敗 / 略過統計
+3. 若有 Spring Cloud Contract，驗證契約測試通過
+4. 呼叫 `/update-kb`，依 `{{qa_format}}` 建立 `{$PROJECT_KB}/qa-records/{TICKET}-qa.md`，記錄測試案例表、範圍與執行結果
+
+confirm 模式下，完成 Phase 2 輸出後：
+- 詢問使用者是否執行測試
+- 確認後執行，完成後呼叫 `/update-kb` 記錄結果
 
 ---
 

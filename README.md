@@ -28,6 +28,7 @@ engineering-hub/
 │   │   ├── site-reliability/        # SRE KB: deployment, CI/CD, operations SOPs
 │   │   ├── ADRs/                    # In-project architecture decisions
 │   │   ├── review-history/          # Code review records (per ticket / topic)
+│   │   ├── qa-records/              # QA test-case tables & execution results (per ticket)
 │   │   └── pending/
 │   │       ├── jira.txt             # List of requirement tickets pending spec creation
 │   │       └── logs/                # KB update records
@@ -55,6 +56,36 @@ engineering-hub/
 4. Launch `/my-work-agent`, select the newly created KB, and you're ready to go.
 
 > Alternatively, run `/update-kb` and select the new KB — the skill will automatically scaffold the directory structure from `demo_KBs` on first use.
+
+---
+
+## Development Workflow — `/my-work-agent`
+
+`/my-work-agent` drives a full **Spec-Driven development lifecycle** through multi-role subagents. Each role reads from the project KB and shared knowledge, then delivers structured output for that stage.
+
+```
+Requirements Planning → Spec Conversion → Spec-Driven Development → Code Review → QA
+                             ↕ ADR Communication (spans Spec through Development)
+```
+
+| Stage | Role | What it does |
+|-------|------|-------------|
+| **Requirements Planning** | PM | Reviews story ACs for completeness, ambiguity, and cross-service dependencies; confirms gaps with the user and produces Gherkin templates for unclear ACs, or (in auto mode) analyzes and completes the above automatically; runs `/update-kb` to record the **first draft of `specs/{TICKET}.md`** |
+| **Spec Conversion** | SA + `/update-kb` | The **SA process**: transforms the first-draft requirements from Requirements Planning into a complete technical **Software Requirements Specification** — the full `specs/{TICKET}.md` — covering functional goals, ACs, data flow, interface contracts, and non-functional requirements; runs `/update-kb` to record the completed spec. If partial implementation already exists at this stage, also creates `specs/impls/{TICKET}-impls.md` via `/update-kb`. Prototype pages can be read via Playwright MCP for gap analysis. |
+| **ADR Communication** | CONSULTANT | Active from the **Spec stage onward**. While writing the spec, identifies each decision point and examines requirements, system-scale constraints, existing architectural limits, and the project tech stack to avoid conflicts with existing decisions — then communicates with the user or (in auto mode) self-analyzes to determine the best solution; runs `/update-kb` to record an ADR for every confirmed decision. During implementation, re-verifies that design choices remain consistent with the settled ADRs. |
+| **Spec-Driven Development** | BACKEND | Reads Spec, project ADRs, system-scale constraints, and technology choices; proposes a recommended implementation approach (or implements directly in auto mode); produces complete code conforming to `/code-architect`; generates a program flow diagram via `/diagram`; runs `/update-kb` on completion to record the implementation and create `specs/impls/{TICKET}-impls.md` if not already created in the Spec Conversion stage |
+| **Code Review** | REVIEWER | Ticket-mode: verifies the implementation fulfils the Spec's stated purpose; audits code quality, performance, and design patterns across **all code changes in this iteration**; confirms and fixes findings with the user one by one, or (in auto mode) applies fixes automatically; re-runs `/diagram` in **sync mode** to update the flow diagram after all fixes; runs `/update-kb` on completion to record the review findings and all corrections |
+| **QA Planning** | QA | Generates test strategy and a full test-case table from Spec ACs; identifies edge cases and produces Spring Cloud Contract definitions; confirms test coverage with the user, or (in auto mode) writes and executes unit and integration tests then reports results; runs `/update-kb` on completion to record the test-case table, coverage scope, and test results |
+
+**Execution modes** — `/my-work-agent` offers four modes to choose from:
+- **Single Role** — run one stage only, always in confirm mode
+- **Partial Pipeline** — start at any stage and run sequentially through to QA
+- **Full Pipeline** — run every stage from Requirements Planning through QA
+- **PREVIEW** — dispatches BACKEND + QA subagents in parallel on the same story, returning both an implementation plan and a test strategy in a single response — a lightweight exploration before committing to the full pipeline
+
+For Partial/Full Pipeline, each stage can be set independently to **auto** (runs unattended and fires `/update-kb` automatically) or **confirm** (pauses at each decision point for user approval before `/update-kb`).
+
+Run `/my-work-agent`, select the relevant project KB, choose an execution mode, and — for pipeline modes — set auto/confirm per stage to start.
 
 ---
 
@@ -127,6 +158,10 @@ Important in-project architecture decisions; may contain project-identifying inf
 
 Code review records organized by ticket or topic. Each file captures the review scope, quality issues, performance / atomicity findings, design pattern observations, and follow-up items. Use `/update-kb` to create or append entries.
 
+### QA Records — `{project_KB}/qa-records/`
+
+Test-case tables and execution results organized by ticket, generated by the QA stage from spec ACs. Each file (`{TICKET}-qa.md`) captures the test strategy, Happy Path / Edge Case / error-scenario tables, Spring Cloud Contract coverage, and test execution results. See `demo_KBs/qa-records/qa-format.md` for the format. Use `/update-kb` to create or append entries.
+
 ---
 
 ## Updating the Knowledge Base
@@ -137,6 +172,8 @@ Use the `/update-kb` skill to update any KB content. It supports:
 - Creating project architecture decisions and extracting de-identified versions into the shared ADRs
 - Logging code review records to `review-history/`
 - Adding technology research notes to `common_KBs/tech-research/`
+
+For content written to the shared, mandatory-de-identification paths (`common_KBs/ADRs/`, `common_KBs/tech-research/`), `/update-kb` scans against a de-identification checklist (project/company names, ticket numbers, real service/class/package names, personal names/emails, internal domains/IPs, business-specific codes) and replaces each with a consistent placeholder before writing. The identifier-to-placeholder mapping is shown at the end of the conversation for user review, but is never written into the KB document, the update log, or any other file — keeping the original business content out of anything persisted.
 
 ---
 
@@ -172,6 +209,7 @@ engineering-hub/
 │   │   ├── site-reliability/        # SRE KB：部署、CI/CD、維運 SOP
 │   │   ├── ADRs/                    # 專案內架構決策
 │   │   ├── review-history/          # Code Review 記錄（依票號 / 主題）
+│   │   ├── qa-records/              # QA 測試案例表與執行結果（依票號）
 │   │   └── pending/
 │   │       ├── jira.txt             # 待建 spec 的需求票清單
 │   │       └── logs/                # KB 更新記錄
@@ -199,6 +237,36 @@ engineering-hub/
 4. 啟動 `/my-work-agent` 選擇新建的 KB 即可使用
 
 > 也可直接執行 `/update-kb` 並選擇新建的 KB，skill 會在首次使用時自動從 `demo_KBs` 初始化目錄結構。
+
+---
+
+## 開發工作流程 — `/my-work-agent`
+
+`/my-work-agent` 透過多角色子代理（subagent）支援完整的 **Spec-Driven 開發生命週期**。每個角色從專案 KB 與共用知識讀取所需資訊，輸出該階段的結構化產出。
+
+```
+需求企劃 → Spec 轉化 → Spec-Driven 實作 → Code Review → QA
+              ↕ ADR 溝通（貫穿 Spec 轉化至實作階段）
+```
+
+| 階段 | 角色 | 執行內容 |
+|------|------|---------|
+| **需求企劃** | PM | 審查 story AC 完整性、模糊描述與跨服務依賴；與使用者確認缺口並對不明確的 AC 補充 Gherkin 範本，或 auto mode 自動完成上述分析；執行 `/update-kb` 記錄 **`specs/{TICKET}.md` 第一版** |
+| **Spec 轉化** | SA + `/update-kb` | **SA 過程**：銜接需求企劃的第一版草稿，補足原始需求至技術文件之間的落差，產出完整的**需求規格說明書**（完整 `specs/{TICKET}.md`），內容涵蓋功能目標、AC、資料流、介面規格與非功能需求；執行 `/update-kb` 記錄完整規格文件。此階段若已有部分實作，同步以 `/update-kb` 建立 `specs/impls/{TICKET}-impls.md`。必要時可透過 Playwright MCP 讀取原型頁面進行差距分析。 |
+| **ADR 溝通** | CONSULTANT | 適用範圍**從 Spec 轉化階段起**。撰寫規格的同時，依據每一個決策點確認需求、系統規模考量、現有架構限制與專案技術棧（避免 spec 與既有決策衝突）— 與使用者溝通或 auto mode 自行分析最佳解；每個確定的決策執行 `/update-kb` 記錄 ADR。實作時再次驗證設計選型的一致性。 |
+| **Spec-Driven 實作** | BACKEND | 讀取 Spec、專案 ADR、系統規模考量與技術選型；提出建議的實作方案（auto mode 直接實作）；產出符合 `/code-architect` 的完整程式碼；以 `/diagram` 畫出程式流程圖；完成後執行 `/update-kb` 記錄實作產出，若 Spec 轉化階段尚未建立則一併建立 `specs/impls/{TICKET}-impls.md` |
+| **Code Review** | REVIEWER | ticket 模式：驗證實作是否達成 Spec 目的；審查範圍涵蓋**此次異動更新的所有程式碼**，包含程式碼品質、效能瓶頸與設計模式；逐一與使用者確認後修正，或 auto mode 自動對發現的問題進行修正；所有修正完成後以 `/diagram` **sync 模式**更新流程圖；結束後執行 `/update-kb` 記錄 review 結果與修正紀錄 |
+| **QA 規劃** | QA | 從 Spec AC 生成測試策略與完整測試案例表；識別邊界條件並產出 Spring Cloud Contract 定義；與使用者確認測試覆蓋範圍，或 auto mode 自動撰寫／執行單元與整合測試並回報測試結果；結束後執行 `/update-kb` 記錄測試案例表、測試範圍與測試結果紀錄 |
+
+**執行模式** — `/my-work-agent` 提供四種執行模式：
+- **單一角色** — 只執行一個 stage，固定採 confirm 模式
+- **部分流程** — 從指定 stage 開始，依序執行至 QA
+- **完整流程** — 從需求企劃執行至 QA 的全 pipeline
+- **PREVIEW** — 同時派發 BACKEND + QA 兩個子代理並行分析同一個 story，一次輸出實作方案與測試策略 — 用於決定是否進入完整 pipeline 前的輕量探索
+
+部分流程與完整流程中，每個 stage 可獨立設定為 **auto**（自動執行並直接呼叫 `/update-kb`）或 **confirm**（每個決策點暫停等待使用者確認後才呼叫 `/update-kb`）。
+
+執行 `/my-work-agent`，選擇對應的專案 KB、選擇執行模式，並（pipeline 模式時）為各 stage 設定 auto/confirm 即可啟動。
 
 ---
 
@@ -271,6 +339,10 @@ ADR 依領域分類（01–08）置於 `knowledge/common_KBs/ADRs/` 下。
 
 依票號或主題整理的 Code Review 記錄，包含審查範圍、品質問題、效能 / 原子性問題、設計模式觀察與後續追蹤事項。使用 `/update-kb` 新增或追加條目。
 
+### QA Records — `{project_KB}/qa-records/`
+
+依票號整理的測試案例表與執行結果，由 QA stage 從 spec AC 生成。每份檔案（`{TICKET}-qa.md`）包含測試策略、Happy Path / Edge Case / 錯誤情境測試表、Spring Cloud Contract 覆蓋範圍與測試執行結果，格式參見 `demo_KBs/qa-records/qa-format.md`。使用 `/update-kb` 新增或追加條目。
+
 ---
 
 ## 更新知識庫
@@ -281,3 +353,5 @@ ADR 依領域分類（01–08）置於 `knowledge/common_KBs/ADRs/` 下。
 - 專案架構決策建立、去識別化提取至共用 ADRs
 - Code Review 記錄寫入 `review-history/`
 - 技術探討筆記新增至 `common_KBs/tech-research/`
+
+寫入強制去識別化的共用路徑（`common_KBs/ADRs/`、`common_KBs/tech-research/`）時，`/update-kb` 會依去識別化檢查清單（專案 / 公司名稱、ticket 單號、真實 service / class / package 名稱、人名 / email、內部網域 / IP、業務專屬代碼）逐段掃描並替換為一致的佔位符後才寫入。「識別項目 → 佔位符」對照表會顯示在對話最後供使用者核對，但不會寫入 KB 文件、更新 log 或任何其他檔案，確保原始業務內容不會被任何檔案留存。

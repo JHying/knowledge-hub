@@ -21,8 +21,8 @@ paths:
   flows:     "@kb/role-flows"
   skills:    "@kb/skills"
   knowledge: "@kb/knowledge"
-  guideline: "@kb/knowledge/guideline"
-  adrs:      "@kb/knowledge/ADRs"
+  guideline: "@kb/knowledge/common_KBs/guideline"
+  adrs:      "@kb/knowledge/common_KBs/ADRs"
   setting:   "@kb/setting"
 
 # ============================================================
@@ -36,6 +36,7 @@ regulations:
   role_qa:         "@kb/roles/role-qa.md"
   role_sre:        "@kb/roles/role-sre.md"
   role_pm:         "@kb/roles/role-pm.md"
+  role_sa:         "@kb/roles/role-sa.md"
   role_consultant: "@kb/roles/role-consultant.md"
   role_reviewer:   "@kb/roles/role-reviewer.md"
 
@@ -44,9 +45,15 @@ regulations:
   flow_qa:         "@kb/role-flows/flow-qa.md"
   flow_sre:        "@kb/role-flows/flow-sre.md"
   flow_pm:         "@kb/role-flows/flow-pm.md"
+  flow_sa:         "@kb/role-flows/flow-sa.md"
   flow_consultant: "@kb/role-flows/flow-consultant.md"
   flow_reviewer:   "@kb/role-flows/flow-reviewer.md"
 
   # 共用知識（跨專案，自動載入）
-  review_guide: "@kb/knowledge/guideline/REVIEW_GUIDE.md"
-  adrs:         "@kb/knowledge/ADRs"
+  review_guide: "@kb/knowledge/common_KBs/guideline/REVIEW_GUIDE.md"
+  adrs:         "@kb/knowledge/common_KBs/ADRs"
+
+  # 專案 KB 內規格範本（相對 {$PROJECT_KB}，執行期動態替換）
+  spec_format:   "{$PROJECT_KB}/specs/spec-format.md"
+  impls_format:  "{$PROJECT_KB}/specs/impls/impls-format.md"
+  qa_format:     "{$PROJECT_KB}/qa-records/qa-format.md"

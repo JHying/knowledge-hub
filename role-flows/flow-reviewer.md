@@ -127,7 +127,15 @@ description: >
 
 ---
 
-## Step 6 — 持續對話
+## Step 6 — diagram sync（pipeline 模式）
+
+若由 pipeline 觸發（非單獨呼叫），所有修正完成後：
+
+執行 `/diagram sync`，更新 `{$PROJECT_KB}/source-codex/services/{service}/flow-diagram-{TICKET}.md` 的 Mermaid 圖，反映 review 後的最終程式碼。
+
+---
+
+## Step 7 — 持續對話（單一角色模式）
 
 完成後詢問：「還有其他要 Review 的嗎？」
 
